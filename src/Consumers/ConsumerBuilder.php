@@ -93,10 +93,10 @@ class ConsumerBuilder implements ConsumerBuilderContract
     public static function createFromConsumerConfig(array $config): ConsumerBuilder
     {
         $consumer = (new static(
-                brokers: $config['brokers'],
-                topics: $config['topics'],
-                groupId: $config['group_id']
-            ))
+            brokers: $config['brokers'],
+            topics: $config['topics'],
+            groupId: $config['group_id']
+        ))
             ->withAutoCommit($config['auto_commit'])
             ->withMaxCommitRetries($config['max_commit_retries'])
             ->withCommitBatchSize($config['commit_batch_size'])
