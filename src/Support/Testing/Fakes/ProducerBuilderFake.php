@@ -37,11 +37,7 @@ class ProducerBuilderFake implements CanProduceMessages
         $this->makeProducer($conf);
     }
 
-    /**
-     * Return a new Junges\Commit\ProducerBuilder instance.
-     *
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
+    /** Return a new Junges\Commit\ProducerBuilder instance.*/
     public static function create(array $config): CanProduceMessages
     {
         return (new static())
@@ -51,12 +47,7 @@ class ProducerBuilderFake implements CanProduceMessages
             ->withConfigOptions($config['options']);
     }
 
-    /**
-     * Set the brokers to be used.
-     *
-     * @param string $brokers
-     * @return \Junges\Kafka\Contracts\CanProduceMessages
-     */
+    /** Set the brokers to be used.*/
     public function withBrokers(string $brokers): CanProduceMessages
     {
         $this->brokers = $brokers;
@@ -64,12 +55,7 @@ class ProducerBuilderFake implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the topic to publish the message.
-     *
-     * @param string $topic
-     * @return \Junges\Kafka\Contracts\CanProduceMessages
-     */
+    /** Set the topic to publish the message.*/
     public function onTopic(string $topic): CanProduceMessages
     {
         $this->topic = $topic;
@@ -79,12 +65,7 @@ class ProducerBuilderFake implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the callback that should be used.
-     *
-     * @param callable $callback
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
+    /** Set the callback that should be used.  */
     public function withProducerCallback(callable $callback): self
     {
         $this->producerCallback = $callback;
@@ -92,27 +73,16 @@ class ProducerBuilderFake implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the given configuration option with the given value on KafkaProducer.
-     *
-     * @param string $name
-     * @param string $option
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withConfigOption(string $name, mixed $option): self
+    /** Set the given configuration option with the given value on KafkaProducer.*/
+    public function withConfigOption(string $name, mixed $option): CanProduceMessages
     {
         $this->options[$name] = $option;
 
         return $this;
     }
 
-    /**
-     * Set config options.
-     *
-     * @param array $options
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withConfigOptions(array $options): self
+    /** Set config options.*/
+    public function withConfigOptions(array $options): CanProduceMessages
     {
         foreach ($options as $name => $value) {
             $this->withConfigOption($name, $value);
@@ -121,65 +91,40 @@ class ProducerBuilderFake implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the message headers.
-     * @param array $headers
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withHeaders(array $headers = []): self
+    /** Set the message headers. */
+    public function withHeaders(array $headers = []): CanProduceMessages
     {
         $this->message->withHeaders($headers);
 
         return $this;
     }
 
-    /**
-     * Set the message key.
-     *
-     * @param string $key
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withKafkaKey(string $key): self
+    /** Set the message key. */
+    public function withKafkaKey(string $key): CanProduceMessages
     {
         $this->message->withKey($key);
 
         return $this;
     }
 
-    /**
-     * Set a message array key.
-     *
-     * @param string $key
-     * @param mixed $message
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withBodyKey(string $key, mixed $message): self
+    /** Set a message array key. */
+    public function withBodyKey(string $key, mixed $message): CanProduceMessages
     {
         $this->message->withBodyKey($key, $message);
 
         return $this;
     }
 
-    /**
-     * Set the entire message.
-     *
-     * @param Message $message
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withMessage(KafkaProducerMessage $message): self
+    /** Set the entire message. */
+    public function withMessage(KafkaProducerMessage $message): CanProduceMessages
     {
         $this->message = $message;
 
         return $this;
     }
 
-    /**
-     * Enable or disable kafka debug.
-     *
-     * @param bool $enabled
-     * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
-     */
-    public function withDebugEnabled(bool $enabled = true): self
+    /** Enable or disable kafka debug.*/
+    public function withDebugEnabled(bool $enabled = true): CanProduceMessages
     {
         if ($enabled) {
             $this->withConfigOptions([
@@ -199,7 +144,7 @@ class ProducerBuilderFake implements CanProduceMessages
      *
      * @return $this
      */
-    public function withDebugDisabled(): self
+    public function withDebugDisabled(): CanProduceMessages
     {
         return $this->withDebugEnabled(false);
     }
@@ -224,16 +169,8 @@ class ProducerBuilderFake implements CanProduceMessages
         return $this->message;
     }
 
-    /**
-     * Set the Sasl configuration.
-     *
-     * @param string $username
-     * @param string $password
-     * @param string $mechanisms
-     * @param string $securityProtocol
-     * @return \Junges\Kafka\Contracts\CanProduceMessages
-     */
-    public function withSasl(string $username, string $password, string $mechanisms, string $securityProtocol = 'SASL_PLAINTEXT'): self
+    /** Set the Sasl configuration.*/
+    public function withSasl(string $username, string $password, string $mechanisms, string $securityProtocol = 'SASL_PLAINTEXT'): CanProduceMessages
     {
         $this->saslConfig = new Sasl(
             username: $username,

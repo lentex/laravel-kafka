@@ -5,12 +5,12 @@ namespace Junges\Kafka\Contracts;
 interface CanConsumeMessagesFromKafka
 {
     /**
-     * Return a ConsumerBuilder instance.
+     * Creates a new ConsumerBuilder instance.
      *
-     * @param array $topics
-     * @param string|null $groupId
-     * @param string|null $brokers
-     * @return \Junges\Kafka\Consumers\ConsumerBuilder
+     * @param  string  $brokers
+     * @param  array  $topics
+     * @param  string|null  $groupId
+     * @return static
      */
-    public function createConsumer(array $topics = [], string $groupId = null, string $brokers = null): ConsumerBuilder;
+    public static function create(string $brokers, array $topics = [], string $groupId = null): self;
 }

@@ -29,13 +29,8 @@ class ProducerBuilder implements CanProduceMessages
         $this->brokers = $broker ?? config('kafka.brokers');
     }
 
-    /**
-     * Return a new Junges\Commit\ProducerBuilder instance
-     *
-     * @param array $config
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public static function create(array $config): self
+    /** Return a new Junges\Commit\ProducerBuilder instance */
+    public static function create(array $config): CanProduceMessages
     {
         return (new static())
             ->withBrokers($config['brokers'])
@@ -44,53 +39,32 @@ class ProducerBuilder implements CanProduceMessages
             ->withConfigOptions($config['options']);
     }
 
-    /**
-     * Set the brokers to be used.
-     *
-     * @param string $brokers
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withBrokers(string $brokers): self
+    /** Set the brokers to be used */
+    public function withBrokers(string $brokers): CanProduceMessages
     {
         $this->brokers = $brokers;
 
         return $this;
     }
 
-    /**
-     * Set the topic to publish the message.
-     *
-     * @param string $topic
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function onTopic(string $topic): self
+    /** Set the topic to publish the message. */
+    public function onTopic(string $topic): CanProduceMessages
     {
         $this->topic = $topic;
 
         return $this;
     }
 
-    /**
-     * Set the given configuration option with the given value on KafkaProducer.
-     *
-     * @param string $name
-     * @param string $option
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withConfigOption(string $name, mixed $option): self
+    /** Set the given configuration option with the given value on KafkaProducer. */
+    public function withConfigOption(string $name, mixed $option): CanProduceMessages
     {
         $this->options[$name] = $option;
 
         return $this;
     }
 
-    /**
-     * Sets the given configuration options based on given key/value array.
-     *
-     * @param array $options
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withConfigOptions(array $options): self
+    /** Sets the given configuration options based on given key/value array. */
+    public function withConfigOptions(array $options): CanProduceMessages
     {
         foreach ($options as $name => $value) {
             $this->withConfigOption($name, $value);
@@ -99,66 +73,40 @@ class ProducerBuilder implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the message headers.
-     *
-     * @param array $headers
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withHeaders(array $headers = []): self
+    /** Set the message headers. */
+    public function withHeaders(array $headers = []): CanProduceMessages
     {
         $this->message->withHeaders($headers);
 
         return $this;
     }
 
-    /**
-     * Set the message key.
-     *
-     * @param string $key
-     * @return $this
-     */
-    public function withKafkaKey(string $key): self
+    /** Set the message key. */
+    public function withKafkaKey(string $key): CanProduceMessages
     {
         $this->message->withKey($key);
 
         return $this;
     }
 
-    /**
-     * Set a message array key.
-     *
-     * @param string $key
-     * @param mixed $message
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withBodyKey(string $key, mixed $message): self
+    /** Set a message array key.*/
+    public function withBodyKey(string $key, mixed $message): CanProduceMessages
     {
         $this->message->withBodyKey($key, $message);
 
         return $this;
     }
 
-    /**
-     * Sets the entire Message to be produced.
-     *
-     * @param KafkaProducerMessage $message
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withMessage(KafkaProducerMessage $message): self
+    /** Sets the entire Message to be produced. */
+    public function withMessage(KafkaProducerMessage $message): CanProduceMessages
     {
         $this->message = $message;
 
         return $this;
     }
 
-    /**
-     * Enables debug.
-     *
-     * @param bool $enabled
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withDebugEnabled(bool $enabled = true): self
+    /** Enables debug */
+    public function withDebugEnabled(bool $enabled = true): CanProduceMessages
     {
         if ($enabled) {
             $this->withConfigOptions([
@@ -173,16 +121,8 @@ class ProducerBuilder implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Set the Sasl configuration.
-     *
-     * @param string $username
-     * @param string $password
-     * @param string $mechanisms
-     * @param string $securityProtocol
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withSasl(string $username, string $password, string $mechanisms, string $securityProtocol = 'SASL_PLAINTEXT'): self
+    /** Set the Sasl configuration. */
+    public function withSasl(string $username, string $password, string $mechanisms, string $securityProtocol = 'SASL_PLAINTEXT'): CanProduceMessages
     {
         $this->saslConfig = new Sasl(
             username: $username,
@@ -207,12 +147,8 @@ class ProducerBuilder implements CanProduceMessages
         return $this;
     }
 
-    /**
-     * Disables debug on kafka producer.
-     *
-     * @return \Junges\Kafka\Producers\ProducerBuilder
-     */
-    public function withDebugDisabled(): self
+    /** Disables debug on kafka producer. */
+    public function withDebugDisabled(): CanProduceMessages
     {
         return $this->withDebugEnabled(false);
     }

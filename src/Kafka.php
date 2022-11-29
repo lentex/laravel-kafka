@@ -61,4 +61,13 @@ class Kafka implements CanPublishMessagesToKafka, CanConsumeMessagesFromKafka
 
         return ConsumerBuilder::createFromConsumerConfig($consumerConfig);
     }
+
+    public static function create(string $brokers, array $topics = [], string $groupId = null): CanConsumeMessagesFromKafka
+    {
+        return ConsumerBuilder::create(
+            brokers: $brokers,
+            topics: $topics,
+            groupId: $groupId
+        );
+    }
 }

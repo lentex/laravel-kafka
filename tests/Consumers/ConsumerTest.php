@@ -5,7 +5,7 @@ namespace Junges\Kafka\Tests\Consumers;
 use Junges\Kafka\Commit\Contracts\CommitterFactory;
 use Junges\Kafka\Commit\VoidCommitter;
 use Junges\Kafka\Config\Config;
-use Junges\Kafka\Consumers\CallableConsumer;
+use Junges\Kafka\Consumers\CallableHandler;
 use Junges\Kafka\Consumers\Consumer;
 use Junges\Kafka\Contracts\KafkaConsumerMessage;
 use Junges\Kafka\Exceptions\KafkaConsumerException;
@@ -226,7 +226,7 @@ class ConsumerTest extends LaravelKafkaTestCase
         $this->mockProducer();
         
 
-        $fakeHandler = new CallableConsumer(
+        $fakeHandler = new CallableHandler(
             function (KafkaConsumerMessage $message) {
                 // sleep 100 miliseconds to simulate restart interval check
                 usleep(100 * 1000);
@@ -241,7 +241,7 @@ class ConsumerTest extends LaravelKafkaTestCase
             securityProtocol: 'security',
             commit: 1,
             groupId: 'group',
-            consumer: $fakeHandler,
+            handler: $fakeHandler,
             sasl: null,
             dlq: null,
             maxMessages: 2,
