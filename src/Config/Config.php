@@ -78,6 +78,8 @@ class Config
         private array $customOptions = [],
         ?HandlesBatchConfiguration $batchConfig = null,
         private bool               $stopAfterLastMessage = false,
+        private int                $restartInterval = 1000,
+        private array              $callbacks = [],
     ) {
         $this->batchConfig = $batchConfig ?? new NullBatchConfig();
     }
@@ -137,27 +139,36 @@ class Config
         }
 
         return collect(array_merge($options, $this->customOptions, $this->getSaslOptions()))
-            ->reject(fn ($option) => in_array($option, self::PRODUCER_ONLY_CONFIG_OPTIONS))
+            ->reject(fn (string|int $option, string $key) => in_array($key, self::PRODUCER_ONLY_CONFIG_OPTIONS))
             ->toArray();
     }
 
-    #[Pure]
     public function getProducerOptions(): array
     {
         $config = [
-            'compression.codec' => 'snappy',
+            'compression.codec' => config('kafka.compression', 'snappy'),
             'bootstrap.servers' => $this->broker,
             'metadata.broker.list' => $this->broker,
         ];
 
         return collect(array_merge($config, $this->customOptions, $this->getSaslOptions()))
-            ->reject(fn ($option) => in_array($option, self::CONSUMER_ONLY_CONFIG_OPTIONS))
+            ->reject(fn (string|int $option, string $key) => in_array($key, self::CONSUMER_ONLY_CONFIG_OPTIONS))
             ->toArray();
     }
 
     public function getBatchConfig(): HandlesBatchConfiguration
     {
         return $this->batchConfig;
+    }
+
+    public function getRestartInterval(): int
+    {
+        return $this->restartInterval;
+    }
+
+    public function getConfigCallbacks(): array
+    {
+        return $this->callbacks;
     }
 
     #[Pure]

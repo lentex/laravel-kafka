@@ -6,7 +6,10 @@ use Junges\Kafka\Config\Sasl;
 use Junges\Kafka\Message\Message;
 use Junges\Kafka\Producers\MessageBatch;
 
-interface CanProduceMessages
+/**
+ * @internal
+ */
+interface CanProduceMessages extends InteractsWithConfigCallbacks
 {
     public static function create(array $config): self;
 
@@ -112,5 +115,12 @@ interface CanProduceMessages
      */
     public function send(): bool;
 
+    /**
+     * Send a message batch to Kafka.
+     *
+     * @param  \Junges\Kafka\Producers\MessageBatch  $messageBatch
+     * @throws \Junges\Kafka\Exceptions\CouldNotPublishMessage
+     * @return int
+     */
     public function sendBatch(MessageBatch $messageBatch): int;
 }

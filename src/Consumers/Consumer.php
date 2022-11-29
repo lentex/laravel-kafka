@@ -5,6 +5,7 @@ namespace Junges\Kafka\Consumers;
 use Closure;
 use Illuminate\Support\Collection;
 use JetBrains\PhpStorm\Pure;
+use Illuminate\Support\Facades\Cache;
 use Junges\Kafka\Commit\Contracts\Committer;
 use Junges\Kafka\Commit\Contracts\CommitterFactory;
 use Junges\Kafka\Commit\DefaultCommitterFactory;
@@ -18,6 +19,7 @@ use Junges\Kafka\Logger;
 use Junges\Kafka\Message\ConsumedMessage;
 use Junges\Kafka\Message\MessageCounter;
 use Junges\Kafka\Retryable;
+use Junges\Kafka\Support\Timer;
 use RdKafka\Conf;
 use RdKafka\KafkaConsumer;
 use RdKafka\Message;
@@ -30,6 +32,11 @@ class Consumer implements CanConsumeMessages
         RD_KAFKA_RESP_ERR__PARTITION_EOF,
         RD_KAFKA_RESP_ERR__TRANSPORT,
         RD_KAFKA_RESP_ERR_REQUEST_TIMED_OUT,
+        RD_KAFKA_RESP_ERR__TIMED_OUT,
+    ];
+
+    private const CONSUME_STOP_EOF_ERRORS = [
+        RD_KAFKA_RESP_ERR__PARTITION_EOF,
         RD_KAFKA_RESP_ERR__TIMED_OUT,
     ];
 
@@ -51,6 +58,8 @@ class Consumer implements CanConsumeMessages
     private MessageDeserializer $deserializer;
     private bool $stopRequested = false;
     private ?Closure $onStopConsume = null;
+    protected int $lastRestart = 0;
+    protected Timer $restartTimer;
 
     /**
      * @param \Junges\Kafka\Config\Config $config
@@ -73,6 +82,8 @@ class Consumer implements CanConsumeMessages
     public function consume(): void
     {
         $this->cancelStopConsume();
+        $this->configureRestartTimer();
+
         $this->consumer = app(KafkaConsumer::class, [
             'conf' => $this->setConf($this->config->getConsumerOptions()),
         ]);
@@ -91,6 +102,7 @@ class Consumer implements CanConsumeMessages
 
         do {
             $this->retryable->retry(fn () => $this->doConsume());
+            $this->checkForRestart();
         } while (! $this->maxMessagesLimitReached() && ! $this->stopRequested);
 
         if ($this->onStopConsume) {
@@ -134,7 +146,7 @@ class Consumer implements CanConsumeMessages
      */
     private function doConsume(): void
     {
-        $message = $this->consumer->consume(2000);
+        $message = $this->consumer->consume(config('kafka.consumer_timeout_ms', 2000));
         $this->handleMessage($message);
     }
 
@@ -150,6 +162,10 @@ class Consumer implements CanConsumeMessages
 
         foreach ($options as $key => $value) {
             $conf->set($key, $value);
+        }
+
+        foreach ($this->config->getConfigCallbacks() as $method => $callback) {
+            $conf->{$method}($callback);
         }
 
         return $conf;
@@ -186,17 +202,16 @@ class Consumer implements CanConsumeMessages
     {
         $batchConfig = $this->config->getBatchConfig();
 
-        if ($batchConfig->getBatchRepository()->getBatchSize() >= $batchConfig->getBatchSizeLimit()) {
+        $executeBatchCallback = function () use ($batchConfig) {
             $this->executeBatch($batchConfig->getBatchRepository()->getBatch());
             $batchConfig->getBatchRepository()->reset();
+        };
 
-            return;
-        }
-
-        if ($batchConfig->getTimer()->isTimedOut() && $batchConfig->getBatchRepository()->getBatchSize() > 0) {
-            $this->executeBatch($batchConfig->getBatchRepository()->getBatch());
-            $batchConfig->getBatchRepository()->reset();
-        }
+        match (true) {
+            $batchConfig->getBatchRepository()->getBatchSize() >= $batchConfig->getBatchSizeLimit(),
+            $batchConfig->getTimer()->isTimedOut() && $batchConfig->getBatchRepository()->getBatchSize() > 0 => $executeBatchCallback(),
+            default => null
+        };
 
         if ($batchConfig->getTimer()->isTimedOut()) {
             $batchConfig->getTimer()->start($batchConfig->getBatchReleaseInterval());
@@ -353,7 +368,7 @@ class Consumer implements CanConsumeMessages
             $this->handleBatch();
         }
 
-        if ($this->config->shouldStopAfterLastMessage() && RD_KAFKA_RESP_ERR__PARTITION_EOF === $message->err) {
+        if ($this->config->shouldStopAfterLastMessage() && in_array($message->err, self::CONSUME_STOP_EOF_ERRORS)) {
             $this->stopConsume();
         }
 
@@ -375,5 +390,29 @@ class Consumer implements CanConsumeMessages
             'offset' => $message->offset,
             'timestamp' => $message->timestamp,
         ]);
+    }
+
+    protected function configureRestartTimer(): void
+    {
+        $this->lastRestart = $this->getLastRestart();
+        $this->restartTimer = new Timer();
+        $this->restartTimer->start($this->config->getRestartInterval());
+    }
+
+    protected function checkForRestart(): void
+    {
+        if (! $this->restartTimer->isTimedOut()) {
+            return;
+        }
+
+        $this->restartTimer->start($this->config->getRestartInterval());
+        if ($this->lastRestart !== $this->getLastRestart()) {
+            $this->stopRequested = true;
+        }
+    }
+
+    protected function getLastRestart(): int
+    {
+        return Cache::get('laravel-kafka:consumer:restart', 0);
     }
 }

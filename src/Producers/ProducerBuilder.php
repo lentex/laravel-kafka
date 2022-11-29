@@ -2,6 +2,7 @@
 
 namespace Junges\Kafka\Producers;
 
+use Junges\Kafka\Concerns\InteractsWithConfigCallbacks;
 use Junges\Kafka\Config\Config;
 use Junges\Kafka\Config\Sasl;
 use Junges\Kafka\Contracts\CanProduceMessages;
@@ -10,6 +11,8 @@ use Junges\Kafka\Contracts\MessageSerializer;
 
 class ProducerBuilder implements CanProduceMessages
 {
+    use InteractsWithConfigCallbacks;
+
     private array $options = [];
     private KafkaProducerMessage $message;
     private MessageSerializer $serializer;
@@ -74,7 +77,7 @@ class ProducerBuilder implements CanProduceMessages
      * @param string $option
      * @return \Junges\Kafka\Producers\ProducerBuilder
      */
-    public function withConfigOption(string $name, string $option): self
+    public function withConfigOption(string $name, mixed $option): self
     {
         $this->options[$name] = $option;
 
@@ -236,6 +239,13 @@ class ProducerBuilder implements CanProduceMessages
         return $producer->produce($this->message);
     }
 
+    /**
+     * Send a message batch to Kafka.
+     *
+     * @param  \Junges\Kafka\Producers\MessageBatch  $messageBatch
+     * @throws \Junges\Kafka\Exceptions\CouldNotPublishMessage
+     * @return int
+     */
     public function sendBatch(MessageBatch $messageBatch): int
     {
         $producer = $this->build();
@@ -256,6 +266,7 @@ class ProducerBuilder implements CanProduceMessages
             securityProtocol: $this->saslConfig?->getSecurityProtocol(),
             sasl: $this->saslConfig,
             customOptions: $this->options,
+            callbacks: $this->callbacks,
         );
 
         return app(Producer::class, [

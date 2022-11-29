@@ -9,6 +9,7 @@ class Options
 {
     private ?array $topics = null;
     private ?string $handler = null;
+    private ?string $deserializer = null;
     private ?string $groupId = null;
     private ?int $commit = 1;
     private ?string $dlq = null;
@@ -42,6 +43,11 @@ class Options
     public function getHandler(): ?string
     {
         return $this->handler;
+    }
+
+    public function getDeserializer(): ?string
+    {
+        return $this->deserializer;
     }
 
     public function getGroupId(): ?string

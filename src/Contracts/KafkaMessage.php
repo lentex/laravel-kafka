@@ -2,6 +2,9 @@
 
 namespace Junges\Kafka\Contracts;
 
+/**
+ * @internal
+ */
 interface KafkaMessage
 {
     public function setTopicName(string $topic): self;

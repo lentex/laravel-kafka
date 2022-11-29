@@ -3,6 +3,7 @@
 namespace Junges\Kafka\Support\Testing\Fakes;
 
 use Closure;
+use Junges\Kafka\Concerns\InteractsWithConfigCallbacks;
 use Junges\Kafka\Config\Config;
 use Junges\Kafka\Config\Sasl;
 use Junges\Kafka\Contracts\CanProduceMessages;
@@ -13,6 +14,8 @@ use Junges\Kafka\Producers\MessageBatch;
 
 class ProducerBuilderFake implements CanProduceMessages
 {
+    use InteractsWithConfigCallbacks;
+
     private array $options = [];
     private KafkaProducerMessage $message;
     private MessageSerializer $serializer;
@@ -96,7 +99,7 @@ class ProducerBuilderFake implements CanProduceMessages
      * @param string $option
      * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
      */
-    public function withConfigOption(string $name, string $option): self
+    public function withConfigOption(string $name, mixed $option): self
     {
         $this->options[$name] = $option;
 
@@ -163,7 +166,7 @@ class ProducerBuilderFake implements CanProduceMessages
      * @param Message $message
      * @return \Junges\Kafka\Support\Testing\Fakes\ProducerBuilderFake
      */
-    public function withMessage(Message $message): self
+    public function withMessage(KafkaProducerMessage $message): self
     {
         $this->message = $message;
 
@@ -271,6 +274,12 @@ class ProducerBuilderFake implements CanProduceMessages
         return $producer->produce($this->getMessage());
     }
 
+    /**
+     * Send a message batch to Kafka.
+     *
+     * @param  \Junges\Kafka\Producers\MessageBatch  $messageBatch
+     * @return int
+     */
     public function sendBatch(MessageBatch $messageBatch): int
     {
         $producer = $this->build();
@@ -310,7 +319,8 @@ class ProducerBuilderFake implements CanProduceMessages
             broker: $this->brokers,
             topics: [$this->getTopic()],
             sasl: $this->saslConfig,
-            customOptions: $this->options
+            customOptions: $this->options,
+            callbacks: $this->callbacks,
         );
 
         return $this->makeProducer($conf);

@@ -103,4 +103,11 @@ return [
      | Implement BatchRepositoryInterface to save batches in different storage
      */
     'batch_repository' => env('KAFKA_BATCH_REPOSITORY', \Junges\Kafka\BatchRepositories\InMemoryBatchRepository::class),
+
+    /*
+     | The sleep time in milliseconds that will be used when retrying flush
+     */
+    'flush_retry_sleep_in_ms' => 100,
+
+    'consumer_timeout_ms' => env("KAFKA_CONSUMER_DEFAULT_TIMEOUT", 2000),
 ];

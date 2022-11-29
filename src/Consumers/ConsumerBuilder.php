@@ -5,6 +5,7 @@ namespace Junges\Kafka\Consumers;
 use Closure;
 use InvalidArgumentException;
 use Junges\Kafka\Commit\Contracts\CommitterFactory;
+use Junges\Kafka\Concerns\InteractsWithConfigCallbacks;
 use Junges\Kafka\Config\BatchConfig;
 use Junges\Kafka\Config\Config;
 use Junges\Kafka\Config\NullBatchConfig;
@@ -18,6 +19,8 @@ use Junges\Kafka\Support\Timer;
 
 class ConsumerBuilder implements ConsumerBuilderContract
 {
+    use InteractsWithConfigCallbacks;
+
     protected array $topics;
     protected ?int $commit;
     protected ?string $groupId;
@@ -310,7 +313,7 @@ class ConsumerBuilder implements ConsumerBuilderContract
     /**
      * @inheritDoc
      */
-    public function withOption(string $name, string $value): self
+    public function withOption(string $name, mixed $value): self
     {
         $this->options[$name] = $value;
 
@@ -376,7 +379,8 @@ class ConsumerBuilder implements ConsumerBuilderContract
             autoCommit: $this->autoCommit,
             customOptions: $this->options,
             batchConfig: $this->getBatchConfig(),
-            stopAfterLastMessage: $this->stopAfterLastMessage
+            stopAfterLastMessage: $this->stopAfterLastMessage,
+            callbacks: $this->callbacks,
         );
 
         return new Consumer($config, $this->deserializer, $this->committerFactory);

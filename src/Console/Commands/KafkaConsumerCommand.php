@@ -12,7 +12,8 @@ class KafkaConsumerCommand extends Command
 {
     protected $signature = 'kafka:consume 
             {--topics= : The topics to listen for messages (topic1,topic2,...,topicN)} 
-            {--handler= : The consumer which will consume messages in the specified topic} 
+            {--handler= : The consumer which will consume messages in the specified topic}  
+            {--deserializer= : The deserializer class to use when consuming message}
             {--groupId=anonymous : The consumer group id} 
             {--commit=1} 
             {--dlq=? : The Dead Letter Queue} 
@@ -56,6 +57,7 @@ class KafkaConsumerCommand extends Command
         $options = new Options($this->options(), $this->config);
 
         $handler = $options->getHandler();
+        $deserializer = $options->getDeserializer();
 
         $config = new Config(
             broker: $options->getBroker(),
@@ -72,7 +74,7 @@ class KafkaConsumerCommand extends Command
         /** @var Consumer $handler */
         $handler = app(Consumer::class, [
             'config' => $config,
-            'deserializer' => app(MessageDeserializer::class),
+            'deserializer' => app($deserializer ?? MessageDeserializer::class),
         ]);
 
         $handler->consume();
